@@ -3,103 +3,12 @@ Option Strict On
 
 Module craftscii
 
-    Enum BlockType
-
-        Air
-        Land
-        Seabed
-        Rock
-        Water
-        Cave
-        Trunk
-        Leaves
-        Void
-
-    End Enum
     Function Traversable(ByRef aBlock As BlockType) As Boolean
 
-        Dim Result As Boolean = False
         Dim TraversableBlocks() As BlockType = {BlockType.Air, BlockType.Cave, BlockType.Water}
-        For Each Candidate As BlockType In TraversableBlocks
-            If aBlock = Candidate Then
-                Result = True
-                Exit For
-            End If
-        Next
-
-        Return Result
+        Return TraversableBlocks.Contains(aBlock)
 
     End Function
-    Structure BlockGraphic
-
-        Dim Type As BlockType
-        Dim Character As Char
-        Dim ForeColour As ConsoleColor
-        Dim BackColour As ConsoleColor
-
-        Sub New(ByVal Type As BlockType, ByVal Character As Char, ByVal Fore As ConsoleColor, ByVal Back As ConsoleColor)
-
-            Me.Type = Type
-            Me.Character = Character
-            Me.ForeColour = Fore
-            Me.BackColour = Back
-
-        End Sub
-    End Structure
-
-    Class Player
-        Inherits Entity
-
-        Dim Inventory(8) As InventoryItem
-
-        Sub New(ByVal Name As String, ByVal Character As String, ByVal X As Short, ByVal Y As Short)
-            MyBase.New(Name, Character, X, Y, 2)
-            For i As Byte = 0 To 7
-                Inventory(i) = New InventoryItem(CType(i, BlockType), 0)
-            Next
-        End Sub
-
-        Sub Gain(ByVal Material As BlockType, ByVal Quantity As Short)
-            Me.Inventory(Material).Quantity += Quantity
-        End Sub
-
-        Sub Spend(ByVal Material As BlockType, ByVal Quantity As Short)
-            Me.Inventory(Material).Quantity -= Quantity
-        End Sub
-
-        Function Has(ByVal Material As BlockType, ByVal Quantity As Short) As Boolean
-
-            If Inventory(Material).Quantity >= Quantity Then
-                Return True
-            Else
-                Return False
-            End If
-
-        End Function
-        Sub DisplayInventory(ByVal World As Map, ByVal BlockGraphics() As BlockGraphic)
-
-            PutCursor(0, World.Height + 1)
-            For This As Byte = 1 To 7
-
-                Console.ForegroundColor = BlockGraphics(Inventory(This).Material).ForeColour
-                Console.Write("[{0}]{1}: {2}{3}", This, Inventory(This).Material.ToString, Inventory(This).Quantity, vbTab)
-                If This Mod 4 = 0 Then
-                    Console.Write(vbNewLine)
-                End If
-            Next
-
-        End Sub
-
-    End Class
-
-    Structure InventoryItem
-        Dim Material As BlockType
-        Dim Quantity As Short
-        Sub New(ByVal Material As BlockType, ByVal Quantity As Short)
-            Me.Material = Material
-            Me.Quantity = Quantity
-        End Sub
-    End Structure
 
     Sub BlockUI(ByVal World As Map, ByVal BlockGraphics() As BlockGraphic)
 
@@ -119,13 +28,16 @@ Module craftscii
         Options
         Tutorial
     End Enum
+
     Enum DrawMode
         Fast
         Slow
     End Enum
+
     Function Tab(ByVal aString As String) As String
         Return vbTab + aString
     End Function
+
     Function UserShort(ByVal Wanted As String, ByVal GreaterThanThis As Integer, ByVal LessThanThis As Integer) As Short
 
         Dim Acceptable As Boolean = False
@@ -145,9 +57,11 @@ Module craftscii
         Return Result
 
     End Function
+
     Function ApplicationName(ByVal name As String, ByVal version As String) As String
         Return name + " " + version
     End Function
+
     Sub Main()
 
         Dim ProgramName As String = My.Application.Info.AssemblyName
@@ -256,7 +170,7 @@ Module craftscii
             Dim WidthCandidate As Short = CShort(Width + 1)
             If Width < Console.BufferWidth Then
                 'Don't shrink; not allowed.
-                DrawMode = craftscii.DrawMode.Slow
+                DrawMode = DrawMode.Slow
                 'We have to slow draw instead.
             Else
                 Console.BufferWidth = WidthCandidate
@@ -313,6 +227,7 @@ Module craftscii
         Loop
 
     End Sub
+
     Sub Game(ByRef Mode As StateOfPlay, ByVal World As Map, ByVal BlockGraphics() As BlockGraphic, ByVal Player As Player, ByVal Monsters() As Entity, ByVal NumberOfMonstersInPlay As Short)
 
         Dim SelectedBlock As BlockType = BlockType.Land
@@ -631,6 +546,7 @@ Module craftscii
     Function NextStage(ByVal currentStage As TutorialStages) As TutorialStages
         Return CType(currentStage + 1, TutorialStages)
     End Function
+
     Enum TutorialStages
         Movement = 0
         Climbing = 1
@@ -639,6 +555,7 @@ Module craftscii
         Addition = 4
         Monsters = 5
     End Enum
+
     Sub Tutorial(ByRef Mode As StateOfPlay, ByVal World As Map, ByVal BlockGraphics() As BlockGraphic, ByVal Player As Player, ByVal Monsters() As Entity, ByVal NumberOfMonstersInPlay As Short)
 
         Dim SelectedBlock As BlockType = BlockType.Land
@@ -886,9 +803,11 @@ Module craftscii
         PutCursor(Player.X + 1, Player.Y)
 
     End Sub
+
     Enum MonsterType
         Zombie
     End Enum
+
     Sub AddMonster(ByRef Monsters() As Entity, ByRef NumberOfMonstersInPlay As Short, ByVal Type As MonsterType, ByVal World As Map)
 
         NumberOfMonstersInPlay += CShort(1)
@@ -914,21 +833,7 @@ Module craftscii
         Monsters(This).Fall(World)
 
     End Sub
-    Structure Coordinate
-        Dim X As Short
-        Dim Y As Short
-        Sub New(ByVal X As Short, ByVal Y As Short)
-            Me.X = X
-            Me.Y = Y
-        End Sub
-        Shared Operator =(ByVal a As Coordinate, ByVal b As Coordinate) As Boolean
-            Return (a.X = b.X) And (a.Y = b.Y)
-        End Operator
-        Shared Operator <>(ByVal a As Coordinate, ByVal b As Coordinate) As Boolean
-            Return (a.X <> b.X) And (a.Y <> b.Y)
-        End Operator
 
-    End Structure
     Function Below(ByVal X As Short, ByVal Y As Short, ByVal World As Map) As Coordinate
 
         Dim yBelow As Short = CShort(Math.Max(0, Y - 1))
@@ -936,6 +841,7 @@ Module craftscii
         Return CoordBelow
 
     End Function
+
     Function AdjacentBlocks(ByVal X As Short, ByVal Y As Short, ByVal World As Map) As Coordinate()
         Dim Coordinates(4) As Coordinate
         Dim xLeft As Short = CShort(Math.Max(0, X - 1))
@@ -965,13 +871,18 @@ Module craftscii
 
         Return Result
     End Function
+
     Function CreateTestGraphics() As BlockGraphic()
+
         Dim Blocks(8) As BlockGraphic
         For i As Byte = 0 To 8
             Blocks(i) = New BlockGraphic(CType(i, BlockType), "X"c, ConsoleColor.Magenta, ConsoleColor.Black)
         Next
+
         Return Blocks
+
     End Function
+
     Function CreateGraphics(ByVal Player As Player) As BlockGraphic()
 
         Dim Blocks(9) As BlockGraphic
@@ -1052,8 +963,7 @@ Module craftscii
 
     End Sub
     Sub PutCursor(ByVal Left As Integer, ByVal Top As Integer)
-        Console.CursorLeft = Left
-        Console.CursorTop = Top
+        Console.SetCursorPosition(Left, Top)
     End Sub
     Function SafeShort(ByVal anInput As String) As Short
         If IsNumeric(anInput) Then
